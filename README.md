@@ -44,7 +44,7 @@ e.g.
 		end
 
 		def down
-			online_alter_table :foo_table, :execute |t|
+			online_alter_table :foo_table, :execute do |t|
 				t.remove :new_column_name
 			end
 		end

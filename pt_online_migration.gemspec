@@ -6,8 +6,8 @@ require 'pt_online_migration/version'
 Gem::Specification.new do |spec|
   spec.name          = "pt_online_migration"
   spec.version       = PtOnlineMigration::VERSION
-  gem.authors        = ['LeadKarma, LLC']
-  gem.email          = ['support@leadkarma.com']
+  spec.authors        = ['LeadKarma, LLC']
+  spec.email          = ['support@leadkarma.com']
   spec.description   = %q{active record migration wrapper for pt-online-schema-change cli command}
   spec.summary       = %q{online schema migrations for mysql}
   spec.homepage      = ""
@@ -18,6 +18,8 @@ Gem::Specification.new do |spec|
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ["lib"]
 
+  spec.add_development_dependency "activerecord"
   spec.add_development_dependency "bundler", "~> 1.3"
+  spec.add_development_dependency "mocha"
   spec.add_development_dependency "rake"
 end

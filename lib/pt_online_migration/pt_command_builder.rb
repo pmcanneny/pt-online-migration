@@ -48,11 +48,12 @@ module PtOnlineMigration
 
 
 		def command
+			options = ''
 			@pt_options.map do |k, v|
-				@cmd_prefix += " --#{k.to_s.gsub('_', '-')} '#{v}'"
+				options += " --#{k.to_s.gsub('_', '-')} '#{v}'"
 			end
 
-			return "#{@cmd_prefix} #{@modification_type || ''} '#{@alter_statements.join(', ')}'"
+			return "#{@cmd_prefix + options} #{@modification_type} '#{@alter_statements.join(', ')}'"
 		end
 
 

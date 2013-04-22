@@ -11,8 +11,8 @@ module PtOnlineMigration
 			options = args.extract_options!.merge(default_options) {|k, incoming, default| incoming || default}
 			pt_command = PTCommandBuilder.new(args[0], options, args[1] == :execute)
 			yield pt_command
-			puts pt_command.command
 			system(pt_command.command)
 		end
 	end
 end
+
