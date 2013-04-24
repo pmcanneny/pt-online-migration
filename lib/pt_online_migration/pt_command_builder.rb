@@ -70,7 +70,7 @@ module PtOnlineMigration
 		def remove_index(options)
 			alter_statement
 			options = {:column => options} if options.class == Symbol
-			index = name_index(options)
+			index = index_name(options)
 			@alter_statements.push "drop index #{index}"
 		end
 
@@ -85,21 +85,7 @@ module PtOnlineMigration
 			default_options = {:default => :no_default, :precision => 1, :null => true, :scale => 0}
 			options = default_options.merge(options)
 
-			column_definition = []
-			column_definition.push case type
-				when :binary then 'blob'
-				when :boolean then 'tinyint(1)'
-				when :date then 'date'
-				when :datetime then 'datetime'
-				when :decimal then "decimal(#{options[:precision]}, #{options[:scale]})"
-				when :float then 'float'
-				when :integer then options[:limit] ? "int(#{options[:limit]})" : 'int(11)'
-				when :string then options[:limit] ? "varchar(#{options[:limit]})" : 'varchar(255)'
-				when :text then 'text'
-				when :time then 'time'
-				when :timestamp then 'datetime'
-				else type.to_s
-			end
+			column_definition = [ActiveRecord::Base.connection.type_to_sql(type, options[:limit], options[:precision], options[:scale])]
 
 			column_definition.push 'not null' if options[:null] == false
 			options[:default] ||= 'null'
@@ -112,7 +98,7 @@ module PtOnlineMigration
 		end
 
 
-		def name_index(options)
+		def index_name(options)
 			return "#{@table_name}_#{options[:column]}_index" if options[:column]
 			return "#{@table_name}_#{options[:columns].join('_')}_index" if options[:columns]
 			return options[:name] if options[:name]

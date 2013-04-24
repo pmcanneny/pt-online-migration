@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email          = ['support@leadkarma.com']
   spec.description   = %q{active record migration wrapper for pt-online-schema-change cli command}
   spec.summary       = %q{online schema migrations for mysql}
-  spec.homepage      = ""
+  spec.homepage      = "http://www.leadkarma.com/"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files`.split($/)
@@ -18,7 +18,8 @@ Gem::Specification.new do |spec|
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ["lib"]
 
-  spec.add_development_dependency 'activerecord'
+  spec.add_dependency 'activerecord'
+  spec.add_dependency 'mysql2'
   spec.add_development_dependency 'bundler', '~> 1.3'
   spec.add_development_dependency 'mocha'
   spec.add_development_dependency 'rake'

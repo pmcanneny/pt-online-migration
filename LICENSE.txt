@@ -1,4 +1,4 @@
-Copyright (c) 2013 Matt Jardine
+Copyright (c) 2013 LeadKarma LLC
 
 MIT License
 
