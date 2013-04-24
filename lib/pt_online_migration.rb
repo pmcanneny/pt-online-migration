@@ -7,8 +7,8 @@ module PtOnlineMigration
 		def online_alter_table(*args)
 			raise "online_alter_table not supported within 'change' migration" if caller[0][/`.*'/][1..-2] == 'change'
 
-			default_options = {:database => ActiveRecord::Base.connection.current_database}
-			options = args.extract_options!.merge(default_options) {|k, incoming, default| incoming || default}
+			default_options = {:database => connection.current_database}
+			options = default_options.merge(args.extract_options!.symbolize_keys)
 			pt_command = PTCommandBuilder.new(args[0], options, args[1] == :execute)
 			yield pt_command
 			system(pt_command.command)
