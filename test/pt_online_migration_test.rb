@@ -10,9 +10,15 @@ class PTOnlineMigrationTest < Test::Unit::TestCase
 	def setup
 		@test_migration = ActiveRecord::Migration.new
 
-		@test_migration.instance_eval do
-			def system(cmd)
-				return cmd
+		@test_migration.class.class_eval do
+			attr_accessor :cmd, :puts_message
+
+			def system(command)
+				self.cmd = command
+			end
+
+			def puts(message)
+				self.puts_message = message
 			end
 		end
 
@@ -27,7 +33,7 @@ class PTOnlineMigrationTest < Test::Unit::TestCase
 
 
 	def test_complicated_migration
-		command = @test_migration.online_alter_table :foo_table, :execute, :database => 'foo_database', :critical_load => 'Threads_running:50' do |t|
+		@test_migration.online_alter_table :foo_table, :execute, :database => 'foo_database', :critical_load => 'Threads_running:50' do |t|
 			t.integer :new_column, :another_new_column, :limit => 7
 			t.decimal :new_column_with_more_options, :precision => 5, :scale => 3, :default => nil
 			t.change :foo_column, :boolean, :null => false
@@ -43,12 +49,13 @@ class PTOnlineMigrationTest < Test::Unit::TestCase
 			'not null, change column bar_column baz_column varchar(140), add unique index',
 			"foo_index (foo_column)'"
 		]
-		assert_equal expected.join(' '), command
+		assert_equal expected.join(' '), @test_migration.cmd
+		assert_equal true, @test_migration.executed?
 	end
 
 
 	def test_remove_migration
-		command = @test_migration.online_alter_table :foo_table, :execute, :database => 'foo_database', :critical_load => 'Threads_running:50' do |t|
+		@test_migration.online_alter_table :foo_table, :execute, :database => 'foo_database', :critical_load => 'Threads_running:50' do |t|
 			t.remove :new_column, :another_new_column, :new_column_with_more_options
 			t.change :foo_column, :string
 			t.rename :baz_column, :bar_column, :string
@@ -61,17 +68,57 @@ class PTOnlineMigrationTest < Test::Unit::TestCase
 			"modify column foo_column varchar(255), change column baz_column bar_column varchar(255), drop index foo_index'"
 		]
 
-		assert_equal expected.join(' '), command
+		assert_equal expected.join(' '), @test_migration.cmd
+		assert_equal true, @test_migration.executed?
 	end
 
 
 	def test_simple_migration
-		command = @test_migration.online_alter_table :foo_table, :execute do |t|
+		@test_migration.online_alter_table :foo_table, :execute do |t|
 			t.integer :new_column_name
 		end
 
 		expected = "pt-online-schema-change D=stub_db,t=foo_table --execute --alter 'add column new_column_name int(11)'"
-		assert_equal expected, command
+		assert_equal expected, @test_migration.cmd
+		assert_equal true, @test_migration.executed?
 	end
 
+
+	def test_simple_dry_run
+		@test_migration.online_alter_table :foo_table do |t|
+			t.integer :new_column_name
+		end
+
+		expected = "pt-online-schema-change D=stub_db,t=foo_table --dry-run --alter 'add column new_column_name int(11)'"
+		assert_equal expected, @test_migration.cmd
+		assert_equal false, @test_migration.executed?
+	end
+
+
+	def test_announce_pass_through
+		@test_migration.online_alter_table :foo_table do |t|
+			t.integer :new_column_name
+		end
+		@test_migration.announce 'this should pass through'
+		assert_nil @test_migration.puts_message =~ /pt-online-schema-change/
+		assert_not_nil @test_migration.puts_message =~ /this should pass through/
+	end
+
+
+	def test_announce_migrated
+		@test_migration.online_alter_table :foo_table do |t|
+			t.integer :new_column_name
+		end
+		@test_migration.announce 'migrated, this should get cut off'
+		assert_not_nil @test_migration.puts_message =~ /pt-online-schema-change dry-run complete this/
+	end
+
+
+	def test_announce_reverted
+		@test_migration.online_alter_table :foo_table, :execute do |t|
+			t.integer :new_column_name
+		end
+		@test_migration.announce 'reverted, this should get appended'
+		assert_not_nil @test_migration.puts_message =~ /pt-online-schema-change executed, reverted, this should get appended/
+	end
 end
