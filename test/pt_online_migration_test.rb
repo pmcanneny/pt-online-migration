@@ -5,6 +5,8 @@ require 'test/unit'
 require 'mysql2'
 require 'mocha/setup'
 
+Rails = Class.new
+
 class PTOnlineMigrationTest < Test::Unit::TestCase
 
 	def setup
@@ -25,6 +27,8 @@ class PTOnlineMigrationTest < Test::Unit::TestCase
 		Mysql2::Client.expects(:new).at_least_once.returns(nil)
 		ActiveRecord::ConnectionAdapters::Mysql2Adapter.any_instance.expects(:configure_connection).at_least_once.returns(true)
 		ActiveRecord::ConnectionAdapters::Mysql2Adapter.any_instance.expects(:current_database).returns('stub_db')
+		Rails.stubs(:configuration => stub(:database_configuration => { 'test' => {'host' => 'stub_host'}}))
+		Rails.expects(:env).returns('test').at_least_once
 		ActiveRecord::Base.establish_connection({
 			"adapter"=>"mysql2",
 			"database"=>"stub_db",
@@ -33,7 +37,7 @@ class PTOnlineMigrationTest < Test::Unit::TestCase
 
 
 	def test_complicated_migration
-		@test_migration.online_alter_table :foo_table, :execute, :database => 'foo_database', :critical_load => 'Threads_running:50' do |t|
+		@test_migration.online_alter_table :foo_table, :execute, :host => 'bar_host', :database => 'foo_database', :critical_load => 'Threads_running:50' do |t|
 			t.integer :new_column, :another_new_column, :limit => 7
 			t.decimal :new_column_with_more_options, :precision => 5, :scale => 3, :default => nil
 			t.change :foo_column, :boolean, :null => false
@@ -42,7 +46,7 @@ class PTOnlineMigrationTest < Test::Unit::TestCase
 		end
 
 		expected = [
-			'pt-online-schema-change D=foo_database,t=foo_table --execute',
+			'pt-online-schema-change h=bar_host,D=foo_database,t=foo_table --execute',
 			"--no-check-alter --critical-load 'Threads_running:50' --alter 'add column",
 			'new_column bigint, add column another_new_column bigint, add column',
 			'new_column_with_more_options decimal(5,3) default null, modify column foo_column tinyint(1)',
@@ -55,7 +59,7 @@ class PTOnlineMigrationTest < Test::Unit::TestCase
 
 
 	def test_remove_migration
-		@test_migration.online_alter_table :foo_table, :execute, :database => 'foo_database', :critical_load => 'Threads_running:50' do |t|
+		@test_migration.online_alter_table :foo_table, :execute, :host => 'bar_host', :database => 'foo_database', :critical_load => 'Threads_running:50' do |t|
 			t.remove :new_column, :another_new_column, :new_column_with_more_options
 			t.change :foo_column, :string
 			t.rename :baz_column, :bar_column, :string
@@ -63,7 +67,7 @@ class PTOnlineMigrationTest < Test::Unit::TestCase
 		end
 
 		expected = [
-			"pt-online-schema-change D=foo_database,t=foo_table --execute --no-check-alter --critical-load 'Threads_running:50' --alter",
+			"pt-online-schema-change h=bar_host,D=foo_database,t=foo_table --execute --no-check-alter --critical-load 'Threads_running:50' --alter",
 			"'drop column new_column, drop column another_new_column, drop column new_column_with_more_options,",
 			"modify column foo_column varchar(255), change column baz_column bar_column varchar(255), drop index foo_index'"
 		]
@@ -78,7 +82,7 @@ class PTOnlineMigrationTest < Test::Unit::TestCase
 			t.integer :new_column_name
 		end
 
-		expected = "pt-online-schema-change D=stub_db,t=foo_table --execute --alter 'add column new_column_name int(11)'"
+		expected = "pt-online-schema-change h=stub_host,D=stub_db,t=foo_table --execute --alter 'add column new_column_name int(11)'"
 		assert_equal expected, @test_migration.cmd
 		assert_equal true, @test_migration.executed?
 	end
@@ -89,7 +93,7 @@ class PTOnlineMigrationTest < Test::Unit::TestCase
 			t.integer :new_column_name
 		end
 
-		expected = "pt-online-schema-change D=stub_db,t=foo_table --dry-run --alter 'add column new_column_name int(11)'"
+		expected = "pt-online-schema-change h=stub_host,D=stub_db,t=foo_table --dry-run --print --alter 'add column new_column_name int(11)'"
 		assert_equal expected, @test_migration.cmd
 		assert_equal false, @test_migration.executed?
 	end

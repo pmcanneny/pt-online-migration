@@ -5,8 +5,8 @@ module PtOnlineMigration
 
 		def initialize(table_name, options, execute)
 			@table_name = table_name
-			execute_clause = execute ? '--execute' : '--dry-run'
-			@cmd_prefix = ["pt-online-schema-change D=#{options.delete(:database)},t=#{table_name} #{execute_clause}"]
+			execute_clause = execute ? '--execute' : '--dry-run --print'
+			@cmd_prefix = ["pt-online-schema-change h=#{options.delete(:host)},D=#{options.delete(:database)},t=#{table_name} #{execute_clause}"]
 			@pt_options = options
 			@alter_statements = []
 		end

@@ -34,7 +34,8 @@ module PtOnlineMigration
 
 			@is_online_schema_change = true
 
-			default_options = {:database => connection.current_database}
+			host = Rails.configuration.database_configuration[Rails.env]['host']
+			default_options = {:host => host, :database => connection.current_database}
 			options = default_options.merge(args.extract_options!.symbolize_keys)
 			pt_command = PTCommandBuilder.new(args[0], options, args[1] == :execute)
 			@executed = args[1] == :execute
