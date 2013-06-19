@@ -45,15 +45,17 @@ class PTOnlineMigrationTest < Test::Unit::TestCase
 			t.index  :foo_column, :unique => true, :name => 'foo_index'
 		end
 
-		expected = [
-			'pt-online-schema-change h=bar_host,u=baz_user,p=biz_password,D=foo_database,t=foo_table --execute',
+		expected_pt_command = [
+			'pt-online-schema-change h=bar_host,u=baz_user,p=biz_password,D=foo_database,t=foo_table --execute --print',
 			"--no-check-alter --critical-load 'Threads_running:50' --alter 'add column",
 			'new_column bigint, add column another_new_column bigint, add column',
 			'new_column_with_more_options decimal(5,3) default null, modify column foo_column tinyint(1)',
 			'not null, change column bar_column baz_column varchar(140), add unique index',
 			"foo_index (foo_column)'"
 		]
-		assert_equal expected.join(' '), @test_migration.cmd
+
+		expected = "nohup #{expected_pt_command.join(' ')} >#{@test_migration.name}.nohup.out 2>&1"
+		assert_equal expected, @test_migration.cmd
 		assert_equal true, @test_migration.executed?
 	end
 
@@ -66,13 +68,14 @@ class PTOnlineMigrationTest < Test::Unit::TestCase
 			t.remove_index :name => 'foo_index'
 		end
 
-		expected = [
-			"pt-online-schema-change h=bar_host,u=baz_user,p=biz_password,D=foo_database,t=foo_table --execute --no-check-alter --critical-load 'Threads_running:50' --alter",
+		expected_pt_command = [
+			"pt-online-schema-change h=bar_host,u=baz_user,p=biz_password,D=foo_database,t=foo_table --execute --print --no-check-alter --critical-load 'Threads_running:50' --alter",
 			"'drop column new_column, drop column another_new_column, drop column new_column_with_more_options,",
 			"modify column foo_column varchar(255), change column baz_column bar_column varchar(255), drop index foo_index'"
 		]
 
-		assert_equal expected.join(' '), @test_migration.cmd
+		expected = "nohup #{expected_pt_command.join(' ')} >#{@test_migration.name}.nohup.out 2>&1"
+		assert_equal expected, @test_migration.cmd
 		assert_equal true, @test_migration.executed?
 	end
 
@@ -82,7 +85,8 @@ class PTOnlineMigrationTest < Test::Unit::TestCase
 			t.integer :new_column_name
 		end
 
-		expected = "pt-online-schema-change h=stub_host,u=stub_user,p=stub_password,D=stub_db,t=foo_table --execute --alter 'add column new_column_name int(11)'"
+		expected_pt_command = "pt-online-schema-change h=stub_host,u=stub_user,p=stub_password,D=stub_db,t=foo_table --execute --print --alter 'add column new_column_name int(11)'"
+		expected = "nohup #{expected_pt_command} >#{@test_migration.name}.nohup.out 2>&1"
 		assert_equal expected, @test_migration.cmd
 		assert_equal true, @test_migration.executed?
 	end
@@ -93,7 +97,8 @@ class PTOnlineMigrationTest < Test::Unit::TestCase
 			t.integer :new_column_name
 		end
 
-		expected = "pt-online-schema-change h=stub_host,u=stub_user,p=stub_password,D=stub_db,t=foo_table --dry-run --print --alter 'add column new_column_name int(11)'"
+		expected_pt_command = "pt-online-schema-change h=stub_host,u=stub_user,p=stub_password,D=stub_db,t=foo_table --dry-run --print --alter 'add column new_column_name int(11)'"
+		expected = "nohup #{expected_pt_command} >#{@test_migration.name}.nohup.out 2>&1"
 		assert_equal expected, @test_migration.cmd
 		assert_equal false, @test_migration.executed?
 	end

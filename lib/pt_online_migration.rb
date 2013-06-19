@@ -40,7 +40,8 @@ module PtOnlineMigration
 			pt_command = PTCommandBuilder.new(args[0], options, args[1] == :execute)
 			@executed = args[1] == :execute
 			yield pt_command
-			system(pt_command.command)
+			puts pt_command.command
+			system("nohup #{pt_command.command} >#{@name}.nohup.out 2>&1")
 			unless $?.success?
 				raise PtOnlineMigrationError.new
 			end
