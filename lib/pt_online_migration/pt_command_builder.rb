@@ -12,6 +12,11 @@ module PtOnlineMigration
 		end
 
 
+		def table_name
+			@table_name
+		end
+
+
 		%w( string text integer float decimal datetime timestamp time date binary boolean ).each do |type|
 			define_method type do |*args|
 				options = args.extract_options!

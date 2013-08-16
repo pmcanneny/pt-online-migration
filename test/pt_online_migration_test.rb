@@ -54,9 +54,8 @@ class PTOnlineMigrationTest < Test::Unit::TestCase
 			"foo_index (foo_column)'"
 		]
 
-		expected = "nohup #{expected_pt_command.join(' ')} >#{@test_migration.name}.nohup.out 2>&1"
+		expected = "nohup #{expected_pt_command.join(' ')} >#{@test_migration.name}_foo_table.nohup.out 2>&1"
 		assert_equal expected, @test_migration.cmd
-		assert_equal true, @test_migration.executed?
 	end
 
 
@@ -74,9 +73,8 @@ class PTOnlineMigrationTest < Test::Unit::TestCase
 			"modify column foo_column varchar(255), change column baz_column bar_column varchar(255), drop index foo_index'"
 		]
 
-		expected = "nohup #{expected_pt_command.join(' ')} >#{@test_migration.name}.nohup.out 2>&1"
+		expected = "nohup #{expected_pt_command.join(' ')} >#{@test_migration.name}_foo_table.nohup.out 2>&1"
 		assert_equal expected, @test_migration.cmd
-		assert_equal true, @test_migration.executed?
 	end
 
 
@@ -86,9 +84,8 @@ class PTOnlineMigrationTest < Test::Unit::TestCase
 		end
 
 		expected_pt_command = "pt-online-schema-change h=stub_host,u=stub_user,p=stub_password,D=stub_db,t=foo_table --execute --print --alter 'add column new_column_name int(11)'"
-		expected = "nohup #{expected_pt_command} >#{@test_migration.name}.nohup.out 2>&1"
+		expected = "nohup #{expected_pt_command} >#{@test_migration.name}_foo_table.nohup.out 2>&1"
 		assert_equal expected, @test_migration.cmd
-		assert_equal true, @test_migration.executed?
 	end
 
 
@@ -98,9 +95,8 @@ class PTOnlineMigrationTest < Test::Unit::TestCase
 		end
 
 		expected_pt_command = "pt-online-schema-change h=stub_host,u=stub_user,p=stub_password,D=stub_db,t=foo_table --dry-run --print --alter 'add column new_column_name int(11)'"
-		expected = "nohup #{expected_pt_command} >#{@test_migration.name}.nohup.out 2>&1"
+		expected = "nohup #{expected_pt_command} >#{@test_migration.name}_foo_table.nohup.out 2>&1"
 		assert_equal expected, @test_migration.cmd
-		assert_equal false, @test_migration.executed?
 	end
 
 

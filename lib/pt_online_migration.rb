@@ -7,13 +7,6 @@ module PtOnlineMigration
 	end
 
 	class ActiveRecord::Migration
-		attr_accessor :executed, :is_online_schema_change
-
-		def executed?
-			return @executed != false
-		end
-
-
 		alias_method :orig_announce, :announce
 
 		def announce(message)
@@ -41,27 +34,9 @@ module PtOnlineMigration
 			@executed = args[1] == :execute
 			yield pt_command
 			puts pt_command.command
-			system("nohup #{pt_command.command} >#{@name}.nohup.out 2>&1")
+			system("nohup #{pt_command.command} >#{@name}_#{pt_command.table_name}.nohup.out 2>&1")
 			unless $?.success?
 				raise PtOnlineMigrationError.new
-			end
-		end
-	end
-
-
-	class ActiveRecord::MigrationProxy
-		delegate :executed?, :to => :migration
-	end
-
-
-	class ActiveRecord::Migrator
-		alias_method :orig_record_version_state_after_migrating, :record_version_state_after_migrating
-
-		def record_version_state_after_migrating(version)
-			active_migration = migrations.detect { |m| m.version == version }
-
-			if active_migration.executed?
-				orig_record_version_state_after_migrating(version)
 			end
 		end
 	end
