@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'pt_online_migration/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "pt_online_migration"
+  spec.name          = "pt-online-migration"
   spec.version       = PtOnlineMigration::VERSION
   spec.authors        = ['LeadKarma, LLC']
   spec.email          = ['support@leadkarma.com']
